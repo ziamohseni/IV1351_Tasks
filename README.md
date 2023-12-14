@@ -6,6 +6,7 @@
 1. Change to the newly created directory `cd IV1351_Tasks/task4`
 1. Make sure there is a database which can be reached with the url on line 38 in `SchoolDAO.java`.
 1. Create the tables described by `IV1351_Tasks/SQL-schema.sql` (postgres).
+1. Insert the dummy data from `IV1351_Tasks/Dummy-data.sql` to the database.
 1. Build the project with the command `mvn install`
 1. Run the program with the command `mvn exec:java`
 
