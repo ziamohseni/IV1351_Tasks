@@ -13,7 +13,7 @@
 ## Commands for the bank program
 
 - `help` displays all commands.
-- `list` Lists instruments. Options: all, <instrument type>.
-- `rent` Rents an instrument. Options: <instrument id> <student id>.
-- `terminate` Terminates the rental of an instrument. Options: <rental id>.
+- `list` Lists instruments. Options: `all, <instrument type>`.
+- `rent` Rents an instrument. Options: `<instrument id> <student id>`.
+- `terminate` Terminates the rental of an instrument. Options: `<rental id>`.
 - `quit` quits the application.
