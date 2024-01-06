@@ -27,6 +27,7 @@ public class InstrumentDAO {
     private Connection connection;
     private PreparedStatement findAllInstrumentsStatement;
     private PreparedStatement findInstrumentByIdStatement;
+    private PreparedStatement findInstrumentByIdStatementForUpdate;
     private PreparedStatement findAvailableInstrumentsByTypeStatement;
     private PreparedStatement updateRentedInstrumentStatement;
 
@@ -55,8 +56,12 @@ public class InstrumentDAO {
         updateRentedInstrumentStatement = connection.prepareStatement("UPDATE " + INSTRUMENT_TABLE_NAME
                 + " SET " + INSTRUMENT_IS_AVAILABLE_COLUMN_NAME + " = ? WHERE "
                 + INSTRUMENT_INSTRUMENT_ID_PK_COLUMN_NAME + " = ?");
-        findInstrumentByIdStatement = connection.prepareStatement("SELECT * FROM " + INSTRUMENT_TABLE_NAME + " WHERE "
-                + INSTRUMENT_INSTRUMENT_ID_PK_COLUMN_NAME + " = ?");
+        findInstrumentByIdStatement = connection
+                .prepareStatement("SELECT * FROM " + INSTRUMENT_TABLE_NAME + " WHERE "
+                        + INSTRUMENT_INSTRUMENT_ID_PK_COLUMN_NAME + " = ?");
+        findInstrumentByIdStatementForUpdate = connection
+                .prepareStatement("SELECT * FROM " + INSTRUMENT_TABLE_NAME + " WHERE "
+                        + INSTRUMENT_INSTRUMENT_ID_PK_COLUMN_NAME + " = ? FOR NO KEY UPDATE");
         findAvailableInstrumentsByTypeStatement = connection.prepareStatement("SELECT * FROM "
                 + INSTRUMENT_TABLE_NAME + " WHERE CAST(" + INSTRUMENT_INSTRUMENT_TYPE_COLUMN_NAME
                 + " AS TEXT) = ? AND "
@@ -87,17 +92,25 @@ public class InstrumentDAO {
     }
 
     /**
-     * Finds an instrument in the school database by its id.
+     * Finds an instrument in the school database by its id for update.
      * 
      * @param instrumentID The id of the instrument to be found.
      * @return The instrument with the specified id.
      * @throws SchoolDBException If unable to find instrument.
      */
-    public Instrument findInstrumentById(int instrumentID) throws SchoolDBException {
+    public Instrument findInstrumentById(int instrumentID, boolean lockExclusive) throws SchoolDBException {
         Instrument instrument = null;
+
+        PreparedStatement statementToExecute;
+        if (lockExclusive) {
+            statementToExecute = findInstrumentByIdStatementForUpdate;
+        } else {
+            statementToExecute = findInstrumentByIdStatement;
+        }
+
         try {
-            findInstrumentByIdStatement.setInt(1, instrumentID);
-            try (ResultSet rs = findInstrumentByIdStatement.executeQuery()) {
+            statementToExecute.setInt(1, instrumentID);
+            try (ResultSet rs = statementToExecute.executeQuery()) {
                 if (rs.next()) {
                     instrument = new Instrument(rs.getInt(INSTRUMENT_INSTRUMENT_ID_PK_COLUMN_NAME),
                             rs.getString(INSTRUMENT_INSTRUMENT_TYPE_COLUMN_NAME),
@@ -106,7 +119,10 @@ public class InstrumentDAO {
                             rs.getBoolean(INSTRUMENT_IS_AVAILABLE_COLUMN_NAME));
                 }
             }
-            connection.commit();
+
+            if (!lockExclusive) {
+                connection.commit();
+            }
         } catch (Exception e) {
             throw new SchoolDBException("Could not find instrument with id " + instrumentID, e);
         }

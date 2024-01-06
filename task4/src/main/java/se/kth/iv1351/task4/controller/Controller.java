@@ -40,7 +40,6 @@ public class Controller {
                 return instrumentDB.findAllInstruments();
             } else {
                 String capitalizedOption = capitalizeFirstLetter(option);
-                System.out.println("Capitalized option: " + capitalizedOption);
                 return instrumentDB.findAvailableInstrumentsByType(capitalizedOption);
             }
         } catch (Exception e) {
@@ -62,7 +61,7 @@ public class Controller {
         }
 
         try {
-            Instrument instrument = instrumentDB.findInstrumentById(instrumentID);
+            Instrument instrument = instrumentDB.findInstrumentById(instrumentID, true);
             Student student = studentDB.findStudentById(studentID);
 
             // Throw exception if instrument is not available
@@ -79,13 +78,13 @@ public class Controller {
             Rental newRental = new Rental(instrumentID, studentID);
             instrumentRentalDB.createInstrumentRental(newRental);
 
-            // Update instrument availability
-            instrument.setIsAvailable(false);
-            instrumentDB.updateRentedInstrument(instrument);
-
             // Update student rental limit
             student.decreaseRentalLimit();
             studentDB.updateStudentRentalLimit(student);
+
+            // Update instrument availability
+            instrument.setIsAvailable(false);
+            instrumentDB.updateRentedInstrument(instrument);
         } catch (Exception e) {
             throw new InstrumentRentalException("Could not rent instrument", e);
         }
@@ -111,7 +110,7 @@ public class Controller {
                 throw new InstrumentRentalException("Rental with id (" + rentalID + ") does not exist");
             }
 
-            Instrument instrument = instrumentDB.findInstrumentById(rental.getInstrumentID());
+            Instrument instrument = instrumentDB.findInstrumentById(rental.getInstrumentID(), true);
             Student student = studentDB.findStudentById(rental.getStudentID());
 
             // Terminate rental
